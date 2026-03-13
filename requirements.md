@@ -61,7 +61,7 @@ Vercel (ホスティング)
     │    └─ 監視中であることを示すシンプルな画面
     │
     ├─── /api/check-stock  ← Cronで30分ごとに自動実行
-    │    ├─ AppleのJSON APIからM4 Mac miniの在庫を取得
+    │    ├─ Apple整備品ページのHTMLを取得しスクレイピングでM4 Mac miniの在庫を判定
     │    ├─ 前回の状態と比較（環境変数で管理）
     │    ├─ 変化あり → /api/notifyを呼ぶ
     │    └─ 変化なし → 何もしない
@@ -74,19 +74,19 @@ Vercel (ホスティング)
 
 ## 在庫データの取得方法
 
-スクレイピング（HTMLを解析）よりも、**AppleがページをロードするときにAppleが内部で使っているJSON APIを直接叩く**方法を優先する。
+**HTMLスクレイピング**で整備品ページを取得し、ページ内に M4 Mac mini の商品が含まれるかどうかで在庫を判定する。
 
 ```
-取得方法の優先順位
+取得方法
 
-1位: AppleのJSON APIを直接叩く（fetch のみで実装できる・シンプル）
-2位: HTMLスクレイピング（APIが見つからない場合の保険）
-
-確認方法:
-  ① Appleの整備品ページを開く
+・HTMLスクレイピング
+  ① fetch で Apple の整備品（Mac mini）ページの HTML を取得
      https://www.apple.com/jp/shop/refurbished/mac/mac-mini
-  ② DevTools → Networkタブ → Fetch/XHRでフィルタ
-  ③ JSONを返しているリクエストを特定する
+  ② HTML を解析し、商品リンクやテキストに「M4」が含まれるか判定
+  ③ 必要に応じてページ内の JSON-LD（<script type="application/ld+json">）から商品情報を取得
+
+※ Apple の整備品一覧用の公開 API は存在しないため、ページ取得＋解析で実装する。
+  同様のサービス（例: apple-refurb.mn-memo.com）もスクレイピングで在庫を監視している。
 ```
 
 ---
@@ -116,7 +116,7 @@ Step 2　画面作成（約30分）
     └─ 監視中を示すシンプルな画面をTailwindで作成
 
 Step 3　在庫チェック（約1〜2時間）
-    └─ DevToolsでAppleのJSON APIを特定
+    └─ Apple整備品ページのHTMLをスクレイピングして在庫判定
     └─ /api/check-stock を実装
 
 Step 4　LINE通知（約30分）
@@ -154,3 +154,4 @@ Step 5　Cron設定＆デプロイ（約30分）
 ## 参考サイト
 
 - [RefurbMe](https://www.refurb.me/en-jp) - 同様のサービスの完成形。複数ショップを横断して比較・通知する商用サービス。今回作るものの参考になる。
+- [アップルストア整備済製品 在庫履歴](https://apple-refurb.mn-memo.com/) - 整備品の在庫をスクレイピングで監視し、履歴グラフやXでの入荷速報を提供。APIは使わずページ取得＋解析で実装されている。
