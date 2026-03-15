@@ -8,7 +8,7 @@ export default function Home() {
         <p className="text-gray-600 leading-relaxed">
           M4 Mac miniが入荷したら
           <br />
-          すぐにLINEでお知らせします
+          すぐにLINEでお知らせします💻
         </p>
       </div>
     </div>
