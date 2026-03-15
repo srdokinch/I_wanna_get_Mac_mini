@@ -1,6 +1,6 @@
 const LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push";
 
-const DEFAULT_MESSAGE = "M4 Mac mini の整備品ページにたどり着けました！";
+const DEFAULT_MESSAGE = "Mac miniのページが存在しているぞ👩‍💻";
 
 /**
  * LINE Messaging API でプッシュメッセージを送る

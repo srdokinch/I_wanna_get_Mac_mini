@@ -31,6 +31,18 @@ async function checkMacMiniPageReachable() {
 export async function GET() {
   try {
     const result = await checkMacMiniPageReachable();
+
+    if (result.reached) {
+      const baseUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
+      await fetch(`${baseUrl}/api/notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Mac miniのページが存在しているぞ👩‍💻" }),
+      });
+    }
+
     return Response.json({
       reached: result.reached,
       redirected: result.redirected || undefined,
