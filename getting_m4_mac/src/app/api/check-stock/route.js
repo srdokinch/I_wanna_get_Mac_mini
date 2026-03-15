@@ -28,14 +28,17 @@ async function checkMacMiniPageReachable() {
   return { reached: false, redirected: false, error: `HTTP ${res.status}` };
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     const result = await checkMacMiniPageReachable();
 
     if (result.reached) {
-      const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000";
+      const host = request.headers.get("host") || "";
+      const baseUrl = host
+        ? `https://${host}`
+        : process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000";
       await fetch(`${baseUrl}/api/notify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
