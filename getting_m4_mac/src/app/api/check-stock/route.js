@@ -1,6 +1,6 @@
 // 公式の Mac mini 整備品ページ。リダイレクトなしで 200 が返れば「ページにたどり着けた」= OK
 const APPLE_REFURB_MAC_MINI_URL =
-  "https://www.apple.com/jp/shop/refurbished/mac/mac-mini";
+  "https://www.apple.com/jp/shop/refurbished/mac";
 
 const REDIRECT_STATUSES = [301, 302, 307, 308];
 
