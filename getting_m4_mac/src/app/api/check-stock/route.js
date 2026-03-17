@@ -1,3 +1,6 @@
+// Cron で毎回確実に実行されるようキャッシュを無効化（Vercel 推奨）
+export const dynamic = "force-dynamic";
+
 // 公式の Mac mini 整備品ページ。リダイレクトなしで 200 が返れば「ページにたどり着けた」= OK
 const APPLE_REFURB_MAC_MINI_URL =
   "https://www.apple.com/jp/shop/refurbished/mac";
@@ -30,6 +33,11 @@ async function checkMacMiniPageReachable() {
 
 export async function GET(request) {
   try {
+    // cron がどの URL（Host）で叩いたか確認用（Vercel Logs に表示される）
+    const host = request.headers.get("host") || "(none)";
+    const url = request.url || "(none)";
+    console.log("[check-stock] invoked", { host, url });
+
     const result = await checkMacMiniPageReachable();
 
     if (result.reached) {

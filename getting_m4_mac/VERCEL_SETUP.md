@@ -88,6 +88,105 @@
 
 ---
 
+## 8. Cron が動かないときの Vercel 確認
+
+Cron のスケジュール実行がログに出ない・LINE に通知が来ない場合、以下を**順番に**確認する。
+
+### 8.1 プロジェクトを開く
+
+1. [Vercel](https://vercel.com) にログインする。
+2. ダッシュボードで **i-wanna-get-mac-mini**（または自分のプロジェクト名）をクリックし、**そのプロジェクトの画面**に入る。  
+   （チームや「All Projects」の一覧から選ぶ。）
+
+---
+
+### 8.2 Root Directory（必須）
+
+Cron の設定は **Root Directory で指定したフォルダ内の `vercel.json`** が使われる。ここが違うと cron が登録されない。
+
+1. 左サイドバー **Settings** をクリック。
+2. 一覧から **General** をクリック（Settings のサブメニューやタブ）。
+3. 下にスクロールして **Root Directory** の項目を探す。
+4. **値が `getting_m4_mac` になっているか** 確認する。
+   - **空欄** や **`.`** のまま → リポジトリ直下がルートになる。このプロジェクトはアプリが `getting_m4_mac` 内にあるので、**`getting_m4_mac` に変更**する。
+   - 変更した場合は **Save** し、**Redeploy**（後述）を行う。
+
+---
+
+### 8.3 Production ブランチ（Cron は本番だけ動く）
+
+Cron は **Production デプロイ** にだけ紐づく。Preview 用のデプロイでは動かない。
+
+1. **Settings** → **Git**（または **Connected Git Repository** のあたり）を開く。
+2. **Production Branch**（本番ブランチ）を確認する。
+   - 通常は **`main`** になっている。
+   - `vercel.json` を編集しているブランチが **main であること**、または Production Branch がそのブランチになっていることを確認する。
+3. **Environments** の表で **Production** にチェックが入っている環境（例: Production）が、そのブランチからデプロイされるようになっているか確認する。
+
+---
+
+### 8.4 どのデプロイが「本番」か確認する
+
+**Deployments ページの開き方**（UI やアカウントによっては URL が異なり、`/deployments` で 404 になる場合があります）:
+
+1. **プロジェクトの「トップ」に戻る**  
+   `https://vercel.com/srdokinchs-projects/i-wanna-get-mac-mini/settings/build-and-deployment` にいるときは、アドレスバーの **`i-wanna-get-mac-mini`** の部分をクリックするか、または **`/settings/build-and-deployment` を削除**して  
+   **`https://vercel.com/srdokinchs-projects/i-wanna-get-mac-mini`**  
+   だけにして Enter。プロジェクトの Overview（概要）ページが開く。
+
+2. **その画面から Deployments を探す**  
+   - 左サイドバーに **Deployments** のリンクがあればそれをクリック。  
+   - または、画面上部・プロジェクト名の下に **Overview** / **Deployments** / **Logs** / **Settings** などのタブやリンクがあれば **Deployments** をクリック。  
+   - Overview に「最新のデプロイ」一覧や **View all** のようなリンクがあれば、そこからデプロイ一覧へ進める。
+
+3. **ダッシュボード経由**  
+   [vercel.com/dashboard](https://vercel.com/dashboard) を開く → 一覧で **i-wanna-get-mac-mini** をクリック → 開いたプロジェクト画面で上記と同様に **Deployments** のリンクやタブを探す。
+
+**確認手順:**
+
+1. 上記のいずれかで **Deployments** 一覧を開く。
+2. 一覧の各デプロイには **Production** または **Preview** のラベルが付いている。
+3. **Production** と表示されているデプロイが、**main（または設定した Production Branch）の最新**であることを確認する。
+4. その Production デプロイをクリック → **Building** / **Ready** など、**正常に完了しているか** を確認する。  
+   **Failed** や **Canceled** のままなら、その状態では Cron も動かない。
+
+---
+
+### 8.5 Cron Jobs の有効化と内容
+
+1. **Settings** → **Cron Jobs** をクリック。
+2. **Cron Jobs** が **Enabled**（オン）になっているか確認する。オフならオンにする。
+3. 一覧に **`/api/check-stock`** が **`0 0 * * *`** で出ているか確認する。
+   - 出ていない → その時点の本番デプロイに `vercel.json` が含まれていない可能性。**8.2** と **8.4** を見直し、**Redeploy** する。
+
+---
+
+### 8.6 再デプロイ（Redeploy）のやり方
+
+設定を変えたあとや、Cron が反映されていないときは、**本番を再デプロイ**すると cron が作り直される。
+
+1. **Deployments** を開く。
+2. **一番上（最新）の Production デプロイ** の行の **⋯**（メニュー）をクリック。
+3. **Redeploy** を選ぶ。
+4. **Redeploy** 確認ダイアログで、オプションはそのままで **Redeploy** を実行する。
+5. ビルドが完了したら、**Settings** → **Cron Jobs** で再度 `/api/check-stock` が並んでいるか確認する。
+
+---
+
+### 8.7 確認チェックリスト
+
+| 確認項目 | 期待値 |
+|----------|--------|
+| Root Directory | `getting_m4_mac` |
+| Production Branch | `main`（または `vercel.json` があるブランチ） |
+| 最新の Production デプロイ | ステータスが Ready（成功） |
+| Cron Jobs | Enabled（オン） |
+| Cron 一覧 | `/api/check-stock` が `0 0 * * *` で表示されている |
+
+全部満たしていても動かない場合は、Hobby プラン側の実行遅延や未発火の可能性がある。その場合は [cron-job.org](https://cron-job.org) などで毎朝 9 時に `https://あなたのプロジェクト.vercel.app/api/check-stock` を GET で叩く運用に切り替えると確実。
+
+---
+
 ## まとめ
 
 | やったこと | メモ |
