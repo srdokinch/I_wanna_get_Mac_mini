@@ -1,6 +1,8 @@
 // Cron で毎回確実に実行されるようキャッシュを無効化（Vercel 推奨）
 export const dynamic = "force-dynamic";
 
+import { pushLineNotify, DEFAULT_LINE_MESSAGE } from "@/lib/linePush";
+
 // 公式の Mac mini 整備品ページ。リダイレクトなしで 200 が返れば「ページにたどり着けた」= OK
 const APPLE_REFURB_MAC_MINI_URL =
   "https://www.apple.com/jp/shop/refurbished/mac";
@@ -40,24 +42,25 @@ export async function GET(request) {
 
     const result = await checkMacMiniPageReachable();
 
+    let notifyResult;
     if (result.reached) {
-      const host = request.headers.get("host") || "";
-      const baseUrl = host
-        ? `https://${host}`
-        : process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000";
-      await fetch(`${baseUrl}/api/notify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: "Mac miniのページが存在しているぞ👩‍💻" }),
-      });
+      // 以前は /api/notify へ fetch していたが、同一デプロイへの内部 HTTP が
+      // 環境によっては届かず LINE が送られないことがあったため、直接 LINE API を呼ぶ。
+      notifyResult = await pushLineNotify(DEFAULT_LINE_MESSAGE);
+      if (!notifyResult.sent) {
+        console.error("[check-stock] LINE notify failed", notifyResult.error);
+      } else {
+        console.log("[check-stock] LINE notify ok");
+      }
     }
 
     return Response.json({
       reached: result.reached,
       redirected: result.redirected || undefined,
       error: result.error || undefined,
+      ...(notifyResult !== undefined && {
+        notify: notifyResult.sent ? { sent: true } : { sent: false, error: notifyResult.error },
+      }),
     });
   } catch (e) {
     return Response.json(
