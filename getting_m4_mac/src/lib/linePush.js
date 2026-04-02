@@ -1,7 +1,7 @@
 const LINE_PUSH_URL = "https://api.line.me/v2/bot/message/push";
 
 export const DEFAULT_LINE_MESSAGE =
-  "Mac miniのページが存在しているぞ👩‍💻";
+  "Mac miniのページが存在しているぞ👩‍💻\nhttps://www.apple.com/jp/shop/refurbished/mac/mac-mini";
 
 /**
  * LINE Messaging API でプッシュメッセージを送る（HTTP ルートを経由しない）。
